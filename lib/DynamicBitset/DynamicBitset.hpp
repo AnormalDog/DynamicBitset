@@ -24,7 +24,7 @@ class DynamicBitset {
     DynamicBitset(DynamicBitset&& t_DynamicBitset); // Move constructor
     DynamicBitset& operator=(DynamicBitset&& t_DynamicBitset); // Move assignment
 
-    void print() const noexcept;
+    std::string to_string() const noexcept;
     
   private:
     std::size_t* m_bits = nullptr; // little endian
@@ -38,6 +38,7 @@ class DynamicBitset {
     // PRIVATE METHODS
     void buildBits();
     void buildMask();
+    void build(const std::size_t t_size);
     void clean();
     static std::size_t getNumberBlocks(const std::size_t t_size) noexcept;
     static std::size_t getLastMask(const std::size_t t_number_bits);
@@ -51,6 +52,11 @@ class DynamicBitsetException : public std::exception {
     const char* what() const noexcept override {return m_errorMessage.c_str();}
   private:
     std::string m_errorMessage;
+};
+
+class DynamicBitsetExceptionInvalidSize : public DynamicBitsetException {
+  public:
+    DynamicBitsetExceptionInvalidSize() : DynamicBitsetException("Invalid size creating the DynamicBitset") {}
 };
 
 }

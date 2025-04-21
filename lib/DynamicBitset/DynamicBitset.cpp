@@ -9,6 +9,17 @@
 #include "DynamicBitset/DynamicBitset.hpp"
 #include <iostream>
 #include <bitset>
+#include <sstream>
+
+DynamicBitset::DynamicBitset(const std::size_t t_size, const std::size_t t_num) {
+  build(t_size);
+  m_bits[0] = t_num;
+}
+
+DynamicBitset::DynamicBitset(const std::size_t t_size) {
+  build(t_size);
+  clean();
+}
 
 DynamicBitset::DynamicBitset() {
   m_bits = nullptr;
@@ -28,12 +39,33 @@ DynamicBitset::~DynamicBitset() {
   m_blocks = 0;
 }
 
-DynamicBitset::DynamicBitset(const std::size_t t_size) {
+std::string DynamicBitset::to_string() const noexcept {
+  std::stringstream buffer;
+  for (std::size_t i = 0; i < m_blocks; ++i) {
+    std::size_t block = m_bits[i] & m_mask[i];
+    std::size_t mask = m_mask[i];
+    for (std::size_t j = 0; j < BLOCK_SIZE; ++j) {
+      if (mask % 2 != 0) {
+        if (block % 2 != 0) {
+          buffer << '1';
+        }
+        else {
+          buffer << '0';
+        }
+      }
+      block >>= 1;
+      mask >>= 1;
+    }
+  }
+  return buffer.str();
+}
+
+void DynamicBitset::build(const std::size_t t_size) {
+  if (t_size == 0) throw (DynamicBitsetUtils::DynamicBitsetExceptionInvalidSize());
   m_size = t_size;
   m_blocks = getNumberBlocks(t_size);
   buildBits();
   buildMask();
-  clean();
 }
 
 std::size_t DynamicBitset::getNumberBlocks(const std::size_t t_size) noexcept {
@@ -47,9 +79,11 @@ std::size_t DynamicBitset::getNumberBlocks(const std::size_t t_size) noexcept {
 void DynamicBitset::buildBits() {
   if (m_bits != nullptr) {
     delete[] m_bits;
+    m_bits = nullptr;
   }
   if (m_mask != nullptr) {
     delete[] m_mask;
+    m_mask = nullptr;
   }
   m_bits = new std::size_t[m_blocks];
   m_mask = new std::size_t[m_blocks];
@@ -65,7 +99,7 @@ void DynamicBitset::buildMask() {
 
 void DynamicBitset::clean() {
   for (std::size_t i = 0; i < m_blocks; ++i) {
-    m_bits[i] = ALL_BITS_ONE;
+    m_bits[i] = 0;
   }
 }
 
@@ -73,24 +107,4 @@ std::size_t DynamicBitset::getLastMask(const std::size_t t_number_bits) {
   std::size_t lastMask = ALL_BITS_ONE;
   lastMask >>= (BLOCK_SIZE - t_number_bits);
   return lastMask;
-}
-
-void DynamicBitset::print() const noexcept {
-  for (std::size_t i = 0; i < m_blocks; ++i) {
-    std::size_t block = m_bits[i] & m_mask[i];
-    std::size_t mask = m_mask[i];
-    for (std::size_t j = 0; j < BLOCK_SIZE; ++j) {
-      if (mask % 2 != 0) {
-        if (block % 2 != 0) {
-          std::cout << '1';
-        }
-        else {
-          std::cout << '0';
-        }
-      }
-      block >>= 1;
-      mask >>= 1;
-    }
-  }
-  std::cout << std::endl;
 }
