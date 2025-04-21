@@ -19,12 +19,13 @@ class DynamicBitset {
     // SPECIAL MEMBERS
     DynamicBitset(); // Default constructor
     ~DynamicBitset(); // Destructor
-    DynamicBitset(const DynamicBitset& t_DynamicBitset); // Copy constructor
-    DynamicBitset& operator=(const DynamicBitset& t_DynamicBitset); // Copy assignment
-    DynamicBitset(DynamicBitset&& t_DynamicBitset); // Move constructor
-    DynamicBitset& operator=(DynamicBitset&& t_DynamicBitset); // Move assignment
+    DynamicBitset(const DynamicBitset& t_dynamicBitset); // Copy constructor
+    DynamicBitset& operator=(const DynamicBitset& t_dynamicBitset); // Copy assignment
+    DynamicBitset(DynamicBitset&& t_dynamicBitset); // Move constructor
+    DynamicBitset& operator=(DynamicBitset&& t_dynamicBitset); // Move assignment
 
     std::string to_string() const noexcept;
+    inline std::size_t size() const noexcept {return m_size;}
     
   private:
     std::size_t* m_bits = nullptr; // little endian
@@ -38,10 +39,13 @@ class DynamicBitset {
     // PRIVATE METHODS
     void buildBits();
     void buildMask();
-    void build(const std::size_t t_size);
-    void clean();
-    static std::size_t getNumberBlocks(const std::size_t t_size) noexcept;
-    static std::size_t getLastMask(const std::size_t t_number_bits);
+    void build(const std::size_t t_size); // Call buildBits, buildMask
+    void clean(); // Put all bits to 0
+    void destroy(); // Destroy the object
+    static void copy(DynamicBitset& t_copy, const DynamicBitset& t_toCopy);
+    static void move(DynamicBitset& t_copy, DynamicBitset& t_toMove);
+    static std::size_t getNumberBlocks(const std::size_t t_size) noexcept; // Method to calculate the number of needed blocks
+    static std::size_t getLastMask(const std::size_t t_number_bits); // Method to calculate the mask of the last block
 };
 
 namespace DynamicBitsetUtils {
@@ -56,7 +60,7 @@ class DynamicBitsetException : public std::exception {
 
 class DynamicBitsetExceptionInvalidSize : public DynamicBitsetException {
   public:
-    DynamicBitsetExceptionInvalidSize() : DynamicBitsetException("Invalid size creating the DynamicBitset") {}
+    DynamicBitsetExceptionInvalidSize() : DynamicBitsetException("Invalid size creating the DynamicBitset.") {}
 };
 
 }

@@ -22,21 +22,30 @@ DynamicBitset::DynamicBitset(const std::size_t t_size) {
 }
 
 DynamicBitset::DynamicBitset() {
-  m_bits = nullptr;
-  m_mask = nullptr;
-  m_size = 0;
-  m_blocks = 0;
+  build(BLOCK_SIZE);
+  clean();
 }
 
 DynamicBitset::~DynamicBitset() {
-  if (m_bits != nullptr) {
-    delete[] m_bits;
-  }
-  if (m_mask != nullptr) {
-    delete[] m_mask;
-  }
-  m_size = 0;
-  m_blocks = 0;
+  destroy();
+}
+
+DynamicBitset::DynamicBitset(const DynamicBitset& t_dynamicBitset) {
+  copy(*this, t_dynamicBitset);
+}
+
+DynamicBitset& DynamicBitset::operator=(const DynamicBitset& t_dynamicBitset) {
+  copy(*this, t_dynamicBitset);
+  return *this;
+}
+
+DynamicBitset::DynamicBitset(DynamicBitset&& t_dynamicBitset) {
+  move(*this, t_dynamicBitset);
+}
+
+DynamicBitset& DynamicBitset::operator=(DynamicBitset&& t_dynamicBitset) {
+  move(*this, t_dynamicBitset);
+  return *this;
 }
 
 std::string DynamicBitset::to_string() const noexcept {
@@ -77,14 +86,7 @@ std::size_t DynamicBitset::getNumberBlocks(const std::size_t t_size) noexcept {
 }
 
 void DynamicBitset::buildBits() {
-  if (m_bits != nullptr) {
-    delete[] m_bits;
-    m_bits = nullptr;
-  }
-  if (m_mask != nullptr) {
-    delete[] m_mask;
-    m_mask = nullptr;
-  }
+  destroy();
   m_bits = new std::size_t[m_blocks];
   m_mask = new std::size_t[m_blocks];
 }
@@ -107,4 +109,39 @@ std::size_t DynamicBitset::getLastMask(const std::size_t t_number_bits) {
   std::size_t lastMask = ALL_BITS_ONE;
   lastMask >>= (BLOCK_SIZE - t_number_bits);
   return lastMask;
+}
+
+void DynamicBitset::destroy() {
+  if (m_bits != nullptr) {
+    delete[] m_bits;
+    m_bits = nullptr;
+  }
+  if (m_mask != nullptr) {
+    delete[] m_mask;
+    m_mask = nullptr;
+  }
+  m_size = 0;
+  m_blocks = 0;
+}
+
+void DynamicBitset::copy(DynamicBitset& t_copy, const DynamicBitset& t_toCopy) {
+  t_copy.destroy();
+  t_copy.build(t_toCopy.size());
+  for (std::size_t i = 0; i < t_copy.size(); ++i) {
+    t_copy.m_bits[i] = t_toCopy.m_bits[i];
+  }
+}
+
+void DynamicBitset::move(DynamicBitset& t_copy, DynamicBitset& t_toMove) {
+  t_copy.destroy();
+  // MOVE
+  t_copy.m_bits = t_toMove.m_bits;
+  t_copy.m_mask = t_toMove.m_mask;
+  t_copy.m_size = t_toMove.m_size;
+  t_copy.m_blocks = t_toMove.m_blocks;
+  // CLEAN
+  t_toMove.m_bits = nullptr;
+  t_toMove.m_mask = nullptr;
+  t_toMove.m_size = 0;
+  t_toMove.m_blocks = 0;
 }
