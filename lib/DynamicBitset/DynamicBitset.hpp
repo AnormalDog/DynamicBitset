@@ -25,6 +25,13 @@ class DynamicBitset {
     DynamicBitset& operator=(DynamicBitset&& t_dynamicBitset); // Move assignment
 
     std::string to_string() const noexcept;
+    unsigned long long to_ullong() const noexcept;
+    unsigned long to_ulong() const noexcept;
+
+    bool all() const noexcept;
+    bool any() const noexcept;
+    bool none() const noexcept;
+
     inline std::size_t size() const noexcept {return m_size;}
     
   private:

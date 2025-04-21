@@ -10,9 +10,11 @@
 #include <iostream>
 #include <bitset>
 #include <sstream>
+#include <algorithm>
 
 DynamicBitset::DynamicBitset(const std::size_t t_size, const std::size_t t_num) {
   build(t_size);
+  std::cout << "size: " << m_size << std::endl;
   m_bits[0] = t_num;
 }
 
@@ -49,8 +51,9 @@ DynamicBitset& DynamicBitset::operator=(DynamicBitset&& t_dynamicBitset) {
 }
 
 std::string DynamicBitset::to_string() const noexcept {
-  std::stringstream buffer;
-  for (std::size_t i = 0; i < m_blocks; ++i) {
+  std::string toReturn;
+  for (long long i = m_blocks - 1; i >= 0; --i) {
+    std::stringstream buffer;
     std::size_t block = m_bits[i] & m_mask[i];
     std::size_t mask = m_mask[i];
     for (std::size_t j = 0; j < BLOCK_SIZE; ++j) {
@@ -64,15 +67,20 @@ std::string DynamicBitset::to_string() const noexcept {
       }
       block >>= 1;
       mask >>= 1;
-    }
+    }  
+    std::string aux = buffer.str();
+    std::reverse(aux.begin(), aux.end());
+    toReturn += aux;
   }
-  return buffer.str();
+  return toReturn;
 }
 
 void DynamicBitset::build(const std::size_t t_size) {
   if (t_size == 0) throw (DynamicBitsetUtils::DynamicBitsetExceptionInvalidSize());
+  destroy();
   m_size = t_size;
   m_blocks = getNumberBlocks(t_size);
+  std::cout << "size: " << m_size << std::endl << "blocks: " << m_blocks << std::endl;
   buildBits();
   buildMask();
 }
@@ -86,7 +94,6 @@ std::size_t DynamicBitset::getNumberBlocks(const std::size_t t_size) noexcept {
 }
 
 void DynamicBitset::buildBits() {
-  destroy();
   m_bits = new std::size_t[m_blocks];
   m_mask = new std::size_t[m_blocks];
 }
@@ -132,16 +139,48 @@ void DynamicBitset::copy(DynamicBitset& t_copy, const DynamicBitset& t_toCopy) {
   }
 }
 
-void DynamicBitset::move(DynamicBitset& t_copy, DynamicBitset& t_toMove) {
-  t_copy.destroy();
+void DynamicBitset::move(DynamicBitset& t_move, DynamicBitset& t_toMove) {
+  t_move.destroy();
   // MOVE
-  t_copy.m_bits = t_toMove.m_bits;
-  t_copy.m_mask = t_toMove.m_mask;
-  t_copy.m_size = t_toMove.m_size;
-  t_copy.m_blocks = t_toMove.m_blocks;
+  t_move.m_bits = t_toMove.m_bits;
+  t_move.m_mask = t_toMove.m_mask;
+  t_move.m_size = t_toMove.m_size;
+  t_move.m_blocks = t_toMove.m_blocks;
   // CLEAN
   t_toMove.m_bits = nullptr;
   t_toMove.m_mask = nullptr;
   t_toMove.m_size = 0;
   t_toMove.m_blocks = 0;
+}
+
+unsigned long long DynamicBitset::to_ullong() const noexcept {
+  std::size_t bits = m_bits[0] & m_mask[0];
+  return static_cast<unsigned long long>(bits);
+
+}
+
+unsigned long DynamicBitset::to_ulong() const noexcept {
+  std::size_t bits = m_bits[0] & m_mask[0];
+  return static_cast<unsigned long>(bits);
+}
+
+bool DynamicBitset::all() const noexcept {
+  for ( std::size_t i = 0; i < m_blocks; ++i) {
+    if ((m_bits[i] & m_mask[i]) != m_mask[i]) return false;
+  }
+  return true;
+}
+
+bool DynamicBitset::any() const noexcept {
+  for (std::size_t i = 0; i < m_blocks; ++i) {
+    if ((m_bits[i] & m_mask[i]) != 0) return true;
+  }
+  return false;
+}
+
+bool DynamicBitset::none() const noexcept {
+  for (std::size_t i = 0; i < m_blocks; ++i) {
+    if ((m_bits[i] & m_mask[i]) != 0) return false;
+  }
+  return true;
 }
