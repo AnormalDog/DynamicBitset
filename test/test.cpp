@@ -3,10 +3,9 @@
 #include <bitset>
 
 int main() {
-  DynamicBitset dynamicbitset(70, ~0);
-  std::cout << dynamicbitset.to_string() << std::endl;
-  std::cout << dynamicbitset.all() << std::endl;
-  std::cout << dynamicbitset.any() << std::endl;
-  std::cout << dynamicbitset.none() << std::endl;
+  DynamicBitset dynamicbitset(66, 0);
+  dynamicbitset.flip(64).flip(60).flip(14);
+  
+  std::cout << dynamicbitset.count() << std::endl;
   return 0;
 }

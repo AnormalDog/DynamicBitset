@@ -31,9 +31,18 @@ class DynamicBitset {
     bool all() const noexcept;
     bool any() const noexcept;
     bool none() const noexcept;
+    std::size_t count() const noexcept;
 
     inline std::size_t size() const noexcept {return m_size;}
-    
+    void printDebug() const noexcept;
+ 
+    DynamicBitset& set() noexcept;
+    DynamicBitset& set(const std::size_t t_position);
+    DynamicBitset& reset() noexcept;
+    DynamicBitset& reset(const std::size_t t_position);   
+    DynamicBitset& flip() noexcept;
+    DynamicBitset& flip(const std::size_t t_position);
+
   private:
     std::size_t* m_bits = nullptr; // little endian
     std::size_t* m_mask = nullptr; // little endian
@@ -53,6 +62,10 @@ class DynamicBitset {
     static void move(DynamicBitset& t_copy, DynamicBitset& t_toMove);
     static std::size_t getNumberBlocks(const std::size_t t_size) noexcept; // Method to calculate the number of needed blocks
     static std::size_t getLastMask(const std::size_t t_number_bits); // Method to calculate the mask of the last block
+    // First block position, second mask position
+    std::pair<std::size_t, std::size_t> getPosition(std::size_t t_position) const;
+    // Returns the mask position inside a block
+    static std::size_t getMaskPosition(const std::size_t t_position);
 };
 
 namespace DynamicBitsetUtils {
@@ -69,5 +82,11 @@ class DynamicBitsetExceptionInvalidSize : public DynamicBitsetException {
   public:
     DynamicBitsetExceptionInvalidSize() : DynamicBitsetException("Invalid size creating the DynamicBitset.") {}
 };
+
+class DynamicBitsetOutOfRange : public DynamicBitsetException {
+  public:
+    DynamicBitsetOutOfRange() : DynamicBitsetException("Position is out of range") {}
+};
+
 
 }
