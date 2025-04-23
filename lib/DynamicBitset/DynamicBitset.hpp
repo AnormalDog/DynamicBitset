@@ -16,6 +16,7 @@ class DynamicBitset {
   public:
     DynamicBitset(const std::size_t t_size, const std::size_t t_num);
     DynamicBitset(const std::size_t t_size);
+    DynamicBitset(const std::string& t_string);
     // SPECIAL MEMBERS
     DynamicBitset(); // Default constructor
     ~DynamicBitset(); // Destructor
@@ -69,6 +70,9 @@ class DynamicBitset {
     friend DynamicBitset operator|(const DynamicBitset& t_1, const DynamicBitset& t_2);
     friend DynamicBitset operator^(const DynamicBitset& t_1, const DynamicBitset& t_2);
 
+    // iostream operators
+    friend std::ostream& operator<<(std::ostream& os, const DynamicBitset& t_bitset);
+    friend std::istream& operator>>(std::istream& is, DynamicBitset& t_bitset);
   private:
     std::size_t* m_bits = nullptr; // little endian
     std::size_t* m_mask = nullptr; // little endian
@@ -101,9 +105,7 @@ class DynamicBitset {
     void bitwiseLeft(std::size_t t_pos);
     void bitwiseRight(std::size_t t_pos);
 
-    // iostream operators
-    friend std::ostream& operator<<(std::ostream& os, const DynamicBitset& t_bitset);
-    friend std::istream& operator>>(std::istream& is, DynamicBitset& t_bitset);
+    void buildFromString(const std::string& t_string);
 };
 
 namespace DynamicBitsetUtils {

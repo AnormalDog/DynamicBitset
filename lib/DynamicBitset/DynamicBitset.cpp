@@ -23,6 +23,10 @@ DynamicBitset::DynamicBitset(const std::size_t t_size) {
   clean();
 }
 
+DynamicBitset::DynamicBitset(const std::string& t_string) {
+  buildFromString(t_string);
+}
+
 DynamicBitset::DynamicBitset() {
   build(BLOCK_SIZE);
   clean();
@@ -416,19 +420,24 @@ std::ostream& operator<<(std::ostream& os, const DynamicBitset& t_bitset) {
 std::istream& operator>>(std::istream& is, DynamicBitset& t_bitset) {
   std::string aux;
   is >> aux;
-  t_bitset.destroy();
-  t_bitset.build(aux.size());
-  const std::size_t sizeAux = aux.size() - 1;
-  for (std::size_t i = 0; i < aux.size(); ++i) {
-    if (aux[i] == '1') {
-      t_bitset.set(sizeAux - i);
+  t_bitset.buildFromString(aux);
+
+  return is;
+}
+
+void DynamicBitset::buildFromString(const std::string& t_string) {
+  destroy();
+  build(t_string.size());
+  const std::size_t sizeAux = t_string.size() - 1;
+  for (std::size_t i = 0; i < t_string.size(); ++i) {
+    if (t_string[i] == '1') {
+      set(sizeAux - i);
     }
-    else if (aux[i] == '0') {
+    else if (t_string[i] == '0') {
       continue;
     }
     else {
       throw(DynamicBitsetUtils::DynamicBitsetUnknownChar());
     }
   }
-  return is;
 }

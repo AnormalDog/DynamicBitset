@@ -15,7 +15,6 @@ No dependecy needed
 Uses same (or very similar) interface to std::bitset
 
 ### Current Limitations
-- No std::string constructor
 - No able to assign using the operator[]
 - No able to operate different size objects
 
