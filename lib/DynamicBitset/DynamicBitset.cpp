@@ -133,8 +133,9 @@ void DynamicBitset::destroy() {
 void DynamicBitset::copy(DynamicBitset& t_copy, const DynamicBitset& t_toCopy) {
   t_copy.destroy();
   t_copy.build(t_toCopy.size());
-  for (std::size_t i = 0; i < t_copy.size(); ++i) {
-    t_copy.m_bits[i] = t_toCopy.m_bits[i];
+  for (std::size_t i = 0; i < t_copy.m_blocks; ++i) {
+    const std::size_t blockToCopy = t_toCopy.m_bits[i];
+    t_copy.m_bits[i] = blockToCopy;
   }
 }
 
@@ -146,9 +147,11 @@ void DynamicBitset::move(DynamicBitset& t_move, DynamicBitset& t_toMove) {
   t_move.m_size = t_toMove.m_size;
   t_move.m_blocks = t_toMove.m_blocks;
   // CLEAN
-  t_move.destroy();
-  t_move.build(1);
-  t_move.clean();
+  t_toMove.m_bits = nullptr;
+  t_toMove.m_mask = nullptr;
+  t_toMove.m_size = 0;
+  t_toMove.m_blocks = 0;
+  t_toMove.build(1);
 }
 
 unsigned long long DynamicBitset::to_ullong() const noexcept {
@@ -217,9 +220,7 @@ DynamicBitset& DynamicBitset::set(const std::size_t t_position) {
 }
 
 DynamicBitset& DynamicBitset::reset() noexcept {
-  for (std::size_t i = 0; i < m_blocks; ++i) {
-    m_bits[i] = 0;
-  }
+  clean();
   return *this;
 }
 
@@ -267,4 +268,142 @@ std::size_t DynamicBitset::count() const noexcept {
     }
   }
   return numberOfActive;
+}
+
+bool DynamicBitset::operator[](std::size_t t_position) const {
+  return getValueInPosition(t_position);
+}
+
+bool DynamicBitset::test(std::size_t t_position) const {
+  return getValueInPosition(t_position);
+}
+
+bool DynamicBitset::getValueInPosition(std::size_t t_position) const {
+  const std::pair<std::size_t, std::size_t> position(getPosition(t_position));
+  const std::size_t blockPosition = position.first;
+  const std::size_t positionMask = position.second;
+
+  const std::size_t auxBlock = m_bits[blockPosition] & positionMask;
+  if ((auxBlock | 0) == 0) return false;
+  return true;
+}
+
+DynamicBitset operator&(const DynamicBitset& t_1, const DynamicBitset& t_2) {
+  if (t_1.size() != t_2.size()) throw(DynamicBitsetUtils::DynamicBitsetSizeDismatch());
+  DynamicBitset aux(t_1.size());
+  for (std::size_t i = 0; i < aux.m_blocks; ++i) {
+    aux.m_bits[i] = t_1.m_bits[i] & t_2.m_bits[i];
+  }
+  return aux;
+}
+
+DynamicBitset operator|(const DynamicBitset& t_1, const DynamicBitset& t_2) {
+  if (t_1.size() != t_2.size()) throw(DynamicBitsetUtils::DynamicBitsetSizeDismatch());
+  DynamicBitset aux(t_1.size());
+  for (std::size_t i = 0; i < aux.m_blocks; ++i) {
+    aux.m_bits[i] = t_1.m_bits[i] | t_2.m_bits[i];
+  }
+  return aux;
+}
+
+DynamicBitset operator^(const DynamicBitset& t_1, const DynamicBitset& t_2) {
+  if (t_1.size() != t_2.size()) throw(DynamicBitsetUtils::DynamicBitsetSizeDismatch());
+  DynamicBitset aux(t_1.size());
+  for (std::size_t i = 0; i < aux.m_blocks; ++i) {
+    aux.m_bits[i] = t_1.m_bits[i] ^ t_2.m_bits[i];
+  }
+  return aux;
+}
+
+DynamicBitset& DynamicBitset::operator&=(const DynamicBitset& t_other) {
+  *this = *this & t_other;
+  return *this;
+}
+
+DynamicBitset& DynamicBitset::operator|=(const DynamicBitset& t_other) {
+  *this = *this | t_other;
+  return *this;
+}
+
+DynamicBitset& DynamicBitset::operator^=(const DynamicBitset& t_other) {
+  *this = *this ^ t_other;
+  return *this;
+}
+
+DynamicBitset DynamicBitset::operator~() {
+  for (std::size_t i = 0; i < this->m_blocks; ++i) {
+    m_bits[i] = ~m_bits[i];
+  }
+  return *this;
+}
+
+DynamicBitset DynamicBitset::operator<<(std::size_t t_pos) const {
+  DynamicBitset aux = *this;
+  aux.bitwiseLeft(t_pos);
+  return aux;
+}
+
+DynamicBitset DynamicBitset::operator>>(std::size_t t_pos) const {
+  DynamicBitset aux = *this;
+  aux.bitwiseRight(t_pos);
+  return aux;
+}
+
+DynamicBitset& DynamicBitset::operator<<=(std::size_t t_pos) {
+  this->bitwiseLeft(t_pos);
+  return *this;
+}
+
+DynamicBitset& DynamicBitset::operator>>=(std::size_t t_pos) {
+  this->bitwiseRight(t_pos);
+  return *this;
+}
+
+void DynamicBitset::bitwiseLeft(std::size_t t_pos) {
+  std::size_t blockWise = 0;
+  while (t_pos >= BLOCK_SIZE) {
+    ++blockWise;
+    t_pos -= BLOCK_SIZE;
+  }
+  if (blockWise > 0) this->shiftBlocksLeft(blockWise);
+  
+  for (long long i = this->m_blocks - 1; i >= 0; --i) {
+    const std::size_t remain = (this->m_bits[i] & this->m_mask[i]) >> (BLOCK_SIZE - t_pos);
+    this->m_bits[i] = (this->m_bits[i] & this->m_mask[i]) << t_pos;
+    if ((i + 1) < static_cast<long long>(this->m_blocks)) this->m_bits[i + 1] = this->m_bits[i + 1] | remain;
+  }
+}
+
+void DynamicBitset::bitwiseRight(std::size_t t_pos) {
+  std::size_t blockWise = 0;
+  while (t_pos >= BLOCK_SIZE) {
+    ++blockWise;
+    t_pos -= BLOCK_SIZE;
+  }
+  if (blockWise > 0) this->shiftBlocksRight(blockWise);
+  for (long long i = 0; i < static_cast<long long>(this->m_blocks); ++i) {
+    const std::size_t remain = (this->m_bits[i] & this->m_mask[i]) << (BLOCK_SIZE - t_pos);
+    this->m_bits[i] = (this->m_bits[i] & this->m_mask[i]) >> t_pos;
+    if ((i - 1) >= static_cast<long long>(0)) this->m_bits[i - 1] = this->m_bits[i - 1] | remain;
+  }
+}
+
+void DynamicBitset::shiftBlocksLeft(std::size_t t_pos) {
+  for (long long i = m_blocks - 1; i >= 0; --i) {
+    const long long newPos = i + t_pos;
+    if (newPos < static_cast<long long>(m_blocks)) {
+      m_bits[newPos] = m_bits[i];
+    }
+    m_bits[i] = 0;
+  }
+}
+
+void DynamicBitset::shiftBlocksRight(std::size_t t_pos) {
+  for (std::size_t i = 0; i < m_blocks; ++i) {
+    const long long newPos = i - t_pos;
+    if (newPos >= 0) {
+      m_bits[newPos] = m_bits[i];
+    }
+    m_bits[i] = 0;
+  }
 }

@@ -3,9 +3,14 @@
 #include <bitset>
 
 int main() {
-  DynamicBitset dynamicbitset(66, 0);
-  dynamicbitset.flip(64).flip(60).flip(14);
-  
-  std::cout << dynamicbitset.count() << std::endl;
+  DynamicBitset one(70, ~0);
+  //DynamicBitset two(70, 24);
+  //std::cout << one.to_string() << std::endl << two.to_string() << std::endl;
+  //std::cout << (one ^ two).to_string() << std::endl;
+  DynamicBitset three;
+  three = one << 65;
+  std::cout << one.to_string() << std::endl;
+  std::cout << three.to_string() << std::endl;
+
   return 0;
 }
