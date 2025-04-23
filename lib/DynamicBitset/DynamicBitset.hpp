@@ -101,6 +101,9 @@ class DynamicBitset {
     void bitwiseLeft(std::size_t t_pos);
     void bitwiseRight(std::size_t t_pos);
 
+    // iostream operators
+    friend std::ostream& operator<<(std::ostream& os, const DynamicBitset& t_bitset);
+    friend std::istream& operator>>(std::istream& is, DynamicBitset& t_bitset);
 };
 
 namespace DynamicBitsetUtils {

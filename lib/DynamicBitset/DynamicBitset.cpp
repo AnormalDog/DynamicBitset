@@ -407,3 +407,28 @@ void DynamicBitset::shiftBlocksRight(std::size_t t_pos) {
     m_bits[i] = 0;
   }
 }
+
+std::ostream& operator<<(std::ostream& os, const DynamicBitset& t_bitset) {
+  os << t_bitset.to_string();
+  return os;
+}
+
+std::istream& operator>>(std::istream& is, DynamicBitset& t_bitset) {
+  std::string aux;
+  is >> aux;
+  t_bitset.destroy();
+  t_bitset.build(aux.size());
+  const std::size_t sizeAux = aux.size() - 1;
+  for (std::size_t i = 0; i < aux.size(); ++i) {
+    if (aux[i] == '1') {
+      t_bitset.set(sizeAux - i);
+    }
+    else if (aux[i] == '0') {
+      continue;
+    }
+    else {
+      throw(DynamicBitsetUtils::DynamicBitsetUnknownChar());
+    }
+  }
+  return is;
+}
