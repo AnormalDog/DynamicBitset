@@ -131,4 +131,9 @@ class DynamicBitsetSizeDismatch : public DynamicBitsetException {
     DynamicBitsetSizeDismatch() : DynamicBitsetException("The bitsets are of different size") {}
 };
 
+class DynamicBitsetUnknownChar : public DynamicBitsetException {
+  public:
+  DynamicBitsetUnknownChar() : DynamicBitsetException("Unkown character found") {}
+};
+
 }
