@@ -75,6 +75,30 @@ class DynamicBitset {
     // iostream operators
     friend inline std::ostream& operator<<(std::ostream& os, const DynamicBitset& t_bitset);
     friend inline std::istream& operator>>(std::istream& is, DynamicBitset& t_bitset);
+
+    class Reference {
+      public:
+        // Constructor
+        Reference(DynamicBitset& t_reference, const std::size_t t_pos) : m_position(t_pos), m_bitset(t_reference) {}
+        // SPECIAL MEMBERS
+        Reference() = default;
+        ~Reference() = default;
+        Reference(const Reference&) = default;
+        Reference& operator=(const Reference&) = default;
+        Reference(Reference&&) = default;
+        Reference& operator=(Reference&&) = default;
+
+        Reference& operator=(const bool t_value);
+
+        operator bool() const;
+        bool operator~() const;
+        Reference& flip();
+      private:
+        std::size_t m_position;
+        DynamicBitset& m_bitset;
+    };
+
+    Reference operator[](std::size_t t_pos);
   private:
     std::size_t* m_bits = nullptr; // little endian
     std::size_t* m_mask = nullptr; // little endian
@@ -118,9 +142,9 @@ class DynamicBitsetException : public std::exception {
     std::string m_errorMessage;
 };
 
-class DynamicBitsetExceptionInvalidSize : public DynamicBitsetException {
+class DynamicBitsetInvalidSize : public DynamicBitsetException {
   public:
-    DynamicBitsetExceptionInvalidSize() : DynamicBitsetException("Invalid size creating the DynamicBitset.") {}
+    DynamicBitsetInvalidSize() : DynamicBitsetException("Invalid size creating the DynamicBitset.") {}
 };
 
 class DynamicBitsetOutOfRange : public DynamicBitsetException {

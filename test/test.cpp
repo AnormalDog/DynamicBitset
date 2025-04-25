@@ -16,18 +16,11 @@ using namespace DynBitset;
 
 int main() {
   DynamicBitset one(70, ~0);
-  std::cout << one.to_string() << std::endl;
-  //DynamicBitset two(70, 24);
-  //std::cout << one.to_string() << std::endl << two.to_string() << std::endl;
-  //std::cout << (one ^ two).to_string() << std::endl;
-  DynamicBitset three;
-  three = one << 65;
-  DynamicBitset four (100);
-  four.set(85).set(39);
-  std::cout << four << std::endl;
-  four >>= 39;
-  std::cout << four << std::endl;
-
+  DynamicBitset::Reference ref = one[15];
+  ref.flip();
+  std::cout << ref << std::endl;
+  one[10] = false;
+  std::cout << one << std::endl;
 
   return 0;
 }

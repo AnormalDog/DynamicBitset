@@ -83,7 +83,7 @@ std::string DynamicBitset::to_string() const noexcept {
 }
 
 void DynamicBitset::build(const std::size_t t_size) {
-  if (t_size == 0) throw (DynamicBitsetExceptionInvalidSize()); // Bitsets of size 0 breaks the implementation
+  if (t_size == 0) throw (DynamicBitsetInvalidSize()); // Bitsets of size 0 breaks the implementation
   destroy();
   m_size = t_size;
   m_blocks = getNumberBlocks(t_size); // Get the minimal number of blocks needed to represent the numbe of bits
@@ -428,4 +428,33 @@ void DynamicBitset::buildFromString(const std::string& t_string) {
       throw(DynamicBitsetUnknownChar());
     }
   }
+}
+
+DynamicBitset::Reference DynamicBitset::operator[](std::size_t t_pos) {
+  if (t_pos >= m_size) throw(DynamicBitsetOutOfRange());
+  return Reference(*this, t_pos);
+}
+
+// REFERENCE
+DynamicBitset::Reference& DynamicBitset::Reference::operator=(const bool t_value) {
+  if (t_value == true) {
+    m_bitset.set(m_position);
+  }
+  else {
+    m_bitset.reset(m_position);
+  }
+  return *this;
+}
+
+DynamicBitset::Reference::operator bool() const {
+  return m_bitset.getValueInPosition(m_position);
+}
+
+bool DynamicBitset::Reference::operator~() const {
+  return !(m_bitset.getValueInPosition(m_position));
+}
+
+DynamicBitset::Reference& DynamicBitset::Reference::flip() {
+  m_bitset.flip(m_position);
+  return *this;
 }
