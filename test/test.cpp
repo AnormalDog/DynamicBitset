@@ -12,6 +12,8 @@
 #include <iostream>
 #include <bitset>
 
+using namespace DynBitset;
+
 int main() {
   DynamicBitset one(70, ~0);
   std::cout << one.to_string() << std::endl;

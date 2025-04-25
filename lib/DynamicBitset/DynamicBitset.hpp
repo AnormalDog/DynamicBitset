@@ -12,6 +12,8 @@
 #include <string>
 #include <cstddef>
 
+namespace DynBitset {
+
 class DynamicBitset {
   public:
     DynamicBitset(const std::size_t t_size, const std::size_t t_num);
@@ -66,13 +68,13 @@ class DynamicBitset {
     DynamicBitset& operator>>=(std::size_t t_pos);
 
     // Binary logic operators
-    friend DynamicBitset operator&(const DynamicBitset& t_1, const DynamicBitset& t_2);
-    friend DynamicBitset operator|(const DynamicBitset& t_1, const DynamicBitset& t_2);
-    friend DynamicBitset operator^(const DynamicBitset& t_1, const DynamicBitset& t_2);
+    friend inline DynamicBitset operator&(const DynamicBitset& t_1, const DynamicBitset& t_2);
+    friend inline  DynamicBitset operator|(const DynamicBitset& t_1, const DynamicBitset& t_2);
+    friend inline DynamicBitset operator^(const DynamicBitset& t_1, const DynamicBitset& t_2);
 
     // iostream operators
-    friend std::ostream& operator<<(std::ostream& os, const DynamicBitset& t_bitset);
-    friend std::istream& operator>>(std::istream& is, DynamicBitset& t_bitset);
+    friend inline std::ostream& operator<<(std::ostream& os, const DynamicBitset& t_bitset);
+    friend inline std::istream& operator>>(std::istream& is, DynamicBitset& t_bitset);
   private:
     std::size_t* m_bits = nullptr; // little endian
     std::size_t* m_mask = nullptr; // little endian
@@ -84,9 +86,9 @@ class DynamicBitset {
     static constexpr std::size_t ALL_BITS_ONE = ~(0);
 
     // PRIVATE METHODS
-    void buildBits();
+    void buildBlocks();
     void buildMask();
-    void build(const std::size_t t_size); // Call buildBits, buildMask
+    void build(const std::size_t t_size); // Call buildBlocks, buildMask
     void clean(); // Put all bits to 0
     void destroy(); // Destroy the object
     static void copy(DynamicBitset& t_copy, const DynamicBitset& t_toCopy);
@@ -107,8 +109,6 @@ class DynamicBitset {
 
     void buildFromString(const std::string& t_string);
 };
-
-namespace DynamicBitsetUtils {
 
 class DynamicBitsetException : public std::exception {
   public:
@@ -138,4 +138,47 @@ class DynamicBitsetUnknownChar : public DynamicBitsetException {
   DynamicBitsetUnknownChar() : DynamicBitsetException("Unkown character found") {}
 };
 
+DynamicBitset operator&(const DynamicBitset& t_1, const DynamicBitset& t_2) {
+  if (t_1.size() != t_2.size()) throw(DynamicBitsetSizeDismatch());
+  DynamicBitset aux(t_1.size());
+  for (std::size_t i = 0; i < aux.m_blocks; ++i) {
+    // Don´t need to apply mask due it doesn´t affect the significant bits
+    aux.m_bits[i] = t_1.m_bits[i] & t_2.m_bits[i];
+  }
+  return aux;
 }
+
+DynamicBitset operator|(const DynamicBitset& t_1, const DynamicBitset& t_2) {
+  if (t_1.size() != t_2.size()) throw(DynamicBitsetSizeDismatch());
+  DynamicBitset aux(t_1.size());
+  for (std::size_t i = 0; i < aux.m_blocks; ++i) {
+    // Don´t need to apply mask due it doesn´t affect the significant bits
+    aux.m_bits[i] = t_1.m_bits[i] | t_2.m_bits[i];
+  }
+  return aux;
+}
+
+DynamicBitset operator^(const DynamicBitset& t_1, const DynamicBitset& t_2) {
+  if (t_1.size() != t_2.size()) throw(DynamicBitsetSizeDismatch());
+  DynamicBitset aux(t_1.size());
+  for (std::size_t i = 0; i < aux.m_blocks; ++i) {
+    // Don´t need to apply mask due it doesn´t affect the significant bits
+    aux.m_bits[i] = t_1.m_bits[i] ^ t_2.m_bits[i];
+  }
+  return aux;
+}
+
+std::ostream& operator<<(std::ostream& os, const DynamicBitset& t_bitset) {
+  os << t_bitset.to_string();
+  return os;
+}
+
+std::istream& operator>>(std::istream& is, DynamicBitset& t_bitset) {
+  std::string aux;
+  is >> aux;
+  t_bitset.buildFromString(aux);
+
+  return is;
+}
+
+} // namespace DynBitset

@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <cassert>
 
+using namespace DynBitset;
+
 DynamicBitset::DynamicBitset(const std::size_t t_size, const std::size_t t_num) {
   build(t_size);
   m_bits[0] = t_num;
@@ -57,11 +59,11 @@ DynamicBitset& DynamicBitset::operator=(DynamicBitset&& t_dynamicBitset) {
 std::string DynamicBitset::to_string() const noexcept {
   std::string toReturn;
   for (long long i = m_blocks - 1; i >= 0; --i) {
-    std::stringstream buffer;
+    std::stringstream buffer; // Auxiliar buffer, pending of improving
     std::size_t block = m_bits[i] & m_mask[i];
     std::size_t mask = m_mask[i];
     for (std::size_t j = 0; j < BLOCK_SIZE; ++j) {
-      if (mask % 2 != 0) {
+      if (mask % 2 != 0) { // Check the less significant bit of each block
         if (block % 2 != 0) {
           buffer << '1';
         }
@@ -69,26 +71,28 @@ std::string DynamicBitset::to_string() const noexcept {
           buffer << '0';
         }
       }
+      // next bit
       block >>= 1;
-      mask >>= 1;
+      mask >>= 1; 
     }  
     std::string aux = buffer.str();
-    std::reverse(aux.begin(), aux.end());
+    std::reverse(aux.begin(), aux.end()); // quite unneficient, but cleanest approach
     toReturn += aux;
   }
   return toReturn;
 }
 
 void DynamicBitset::build(const std::size_t t_size) {
-  if (t_size == 0) throw (DynamicBitsetUtils::DynamicBitsetExceptionInvalidSize());
+  if (t_size == 0) throw (DynamicBitsetExceptionInvalidSize()); // Bitsets of size 0 breaks the implementation
   destroy();
   m_size = t_size;
-  m_blocks = getNumberBlocks(t_size);
-  buildBits();
+  m_blocks = getNumberBlocks(t_size); // Get the minimal number of blocks needed to represent the numbe of bits
+  buildBlocks();
   buildMask();
 }
 
 std::size_t DynamicBitset::getNumberBlocks(const std::size_t t_size) noexcept {
+  assert (t_size != 0);
   std::size_t numberOfBlocks = 0;
   for (std::size_t i = 0; i < t_size; i+=BLOCK_SIZE) {
     ++numberOfBlocks;
@@ -96,7 +100,7 @@ std::size_t DynamicBitset::getNumberBlocks(const std::size_t t_size) noexcept {
   return numberOfBlocks;
 }
 
-void DynamicBitset::buildBits() {
+void DynamicBitset::buildBlocks() {
   m_bits = new std::size_t[m_blocks];
   m_mask = new std::size_t[m_blocks];
 }
@@ -106,7 +110,7 @@ void DynamicBitset::buildMask() {
     m_mask[i] = ALL_BITS_ONE;
   }
   std::size_t lastMask = m_size - ((m_blocks -1) * BLOCK_SIZE);
-  m_mask[m_blocks - 1] = getLastMask(lastMask);
+  m_mask[m_blocks - 1] = getLastMask(lastMask); // Only the most significant block has a no ~0 mask
 }
 
 void DynamicBitset::clean() {
@@ -122,11 +126,11 @@ std::size_t DynamicBitset::getLastMask(const std::size_t t_number_bits) {
 }
 
 void DynamicBitset::destroy() {
-  if (m_bits != nullptr) {
+  if (m_bits != nullptr) { // Avoid double deletion
     delete[] m_bits;
     m_bits = nullptr;
   }
-  if (m_mask != nullptr) {
+  if (m_mask != nullptr) { // Avoid double deletion
     delete[] m_mask;
     m_mask = nullptr;
   }
@@ -136,9 +140,9 @@ void DynamicBitset::destroy() {
 
 void DynamicBitset::copy(DynamicBitset& t_copy, const DynamicBitset& t_toCopy) {
   t_copy.destroy();
-  t_copy.build(t_toCopy.size());
+  t_copy.build(t_toCopy.size()); // bitset of same size as t_toCopy
   for (std::size_t i = 0; i < t_copy.m_blocks; ++i) {
-    const std::size_t blockToCopy = t_toCopy.m_bits[i];
+    const std::size_t blockToCopy = t_toCopy.m_bits[i]; // copy all the blocks
     t_copy.m_bits[i] = blockToCopy;
   }
 }
@@ -159,39 +163,41 @@ void DynamicBitset::move(DynamicBitset& t_move, DynamicBitset& t_toMove) {
 }
 
 unsigned long long DynamicBitset::to_ullong() const noexcept {
-  std::size_t bits = m_bits[0] & m_mask[0];
-  return static_cast<unsigned long long>(bits);
+  std::size_t bits = m_bits[0] & m_mask[0]; // Aply mask to avoid useless bits
+  return static_cast<unsigned long long>(bits); // return the less significant <sizeof(ullong) * 8 bits> of the less significant block
 
 }
 
 unsigned long DynamicBitset::to_ulong() const noexcept {
-  std::size_t bits = m_bits[0] & m_mask[0];
-  return static_cast<unsigned long>(bits);
+  std::size_t bits = m_bits[0] & m_mask[0];// Aply mask to avoid useless bits
+  return static_cast<unsigned long>(bits); // return the less significant <sizeof(ulong) * 8 bits> of the less significant block
 }
 
 bool DynamicBitset::all() const noexcept {
   for ( std::size_t i = 0; i < m_blocks; ++i) {
-    if ((m_bits[i] & m_mask[i]) != m_mask[i]) return false;
+    if ((m_bits[i] & m_mask[i]) != m_mask[i]) return false; // If applying the mask is equal to mask, then it is true
   }
   return true;
 }
 
 bool DynamicBitset::any() const noexcept {
   for (std::size_t i = 0; i < m_blocks; ++i) {
-    if ((m_bits[i] & m_mask[i]) != 0) return true;
+    if ((m_bits[i] & m_mask[i]) != 0) return true; // If applying the mask is not 0, then atleast 1 bit is set
   }
   return false;
 }
 
 bool DynamicBitset::none() const noexcept {
   for (std::size_t i = 0; i < m_blocks; ++i) {
-    if ((m_bits[i] & m_mask[i]) != 0) return false;
+    if ((m_bits[i] & m_mask[i]) != 0) return false; // exactly the opposite to any
   }
   return true;
 }
 
+// At first, my idea was the .second was t_position (relative position inside the block)
+// But for more comfortable code, I decided the .second was the mask of the relative position
 std::pair<std::size_t, std::size_t> DynamicBitset::getPosition(std::size_t t_position) const {
-  if (t_position >= m_size) throw(DynamicBitsetUtils::DynamicBitsetOutOfRange());
+  if (t_position >= m_size) throw(DynamicBitsetOutOfRange());
   std::size_t blockPosition = 0;
   // Get in what block is allocated
   while (t_position >= BLOCK_SIZE) {
@@ -201,6 +207,7 @@ std::pair<std::size_t, std::size_t> DynamicBitset::getPosition(std::size_t t_pos
   return std::make_pair(blockPosition, getMaskPosition(t_position));
 }
 
+// Returns a mask with all 0 except in the t_position
 std::size_t DynamicBitset::getMaskPosition(const std::size_t t_position) {
   assert(t_position <= BLOCK_SIZE);
   constexpr std::size_t auxMask = 1;
@@ -218,8 +225,7 @@ DynamicBitset& DynamicBitset::set(const std::size_t t_position) {
   const std::pair<std::size_t, std::size_t> position(getPosition(t_position));
   const std::size_t blockPosition = position.first;
   const std::size_t positionMask = position.second;
-  m_bits[blockPosition] |= positionMask;
-
+  m_bits[blockPosition] |= positionMask; // will apply X | 1 in the position, the rest X | 0
   return *this;
 }
 
@@ -232,8 +238,7 @@ DynamicBitset& DynamicBitset::reset(const std::size_t t_position) {
   const std::pair<std::size_t, std::size_t> position(getPosition(t_position));
   const std::size_t blockPosition = position.first;
   const std::size_t positionMask = ~position.second; // Reversed position mask
-  m_bits[blockPosition] &= positionMask;
-
+  m_bits[blockPosition] &= positionMask; // will aply X & 0 in the position, the rest X & 1
   return *this;
 }
 
@@ -250,11 +255,11 @@ DynamicBitset& DynamicBitset::flip(const std::size_t t_position) {
   const std::size_t positionMask = position.second;
 
   // flip the bit in the position
+  //   first, reverse all the block, then, apply mask, all 0 except in the position
   const std::size_t positionValueReversed = ~m_bits[blockPosition] & positionMask;
   // original block with the position bit = 0
   const std::size_t allExceptPositionValue = m_bits[blockPosition] & ~positionMask;
-  m_bits[blockPosition] = allExceptPositionValue | positionValueReversed;
-
+  m_bits[blockPosition] = allExceptPositionValue | positionValueReversed; // example: 000R000 | XXX0XXX
   return *this;
 }
 
@@ -265,9 +270,9 @@ void DynamicBitset::printDebug() const noexcept {
 std::size_t DynamicBitset::count() const noexcept {
   std::size_t numberOfActive = 0;
   for (std::size_t i = 0; i < m_blocks; ++i) {
-    std::size_t block = m_bits[i] & m_mask[i]; // remove no significant bits
+    std::size_t block = m_bits[i] & m_mask[i]; // apply mask; remove no significant bits
     for (std::size_t j = 0; j < BLOCK_SIZE; ++j) {
-      if (block % 2 != 0) ++numberOfActive;
+      if (block % 2 != 0) ++numberOfActive; // check less significant bit
       block >>= 1;
     }
   }
@@ -287,36 +292,9 @@ bool DynamicBitset::getValueInPosition(std::size_t t_position) const {
   const std::size_t blockPosition = position.first;
   const std::size_t positionMask = position.second;
 
-  const std::size_t auxBlock = m_bits[blockPosition] & positionMask;
-  if ((auxBlock | 0) == 0) return false;
+  const std::size_t auxBlock = m_bits[blockPosition] & positionMask; // Get all 0 and the value in t_position
+  if ((auxBlock | 0) == 0) return false; // if BXB | 0 == 0, then X = 0
   return true;
-}
-
-DynamicBitset operator&(const DynamicBitset& t_1, const DynamicBitset& t_2) {
-  if (t_1.size() != t_2.size()) throw(DynamicBitsetUtils::DynamicBitsetSizeDismatch());
-  DynamicBitset aux(t_1.size());
-  for (std::size_t i = 0; i < aux.m_blocks; ++i) {
-    aux.m_bits[i] = t_1.m_bits[i] & t_2.m_bits[i];
-  }
-  return aux;
-}
-
-DynamicBitset operator|(const DynamicBitset& t_1, const DynamicBitset& t_2) {
-  if (t_1.size() != t_2.size()) throw(DynamicBitsetUtils::DynamicBitsetSizeDismatch());
-  DynamicBitset aux(t_1.size());
-  for (std::size_t i = 0; i < aux.m_blocks; ++i) {
-    aux.m_bits[i] = t_1.m_bits[i] | t_2.m_bits[i];
-  }
-  return aux;
-}
-
-DynamicBitset operator^(const DynamicBitset& t_1, const DynamicBitset& t_2) {
-  if (t_1.size() != t_2.size()) throw(DynamicBitsetUtils::DynamicBitsetSizeDismatch());
-  DynamicBitset aux(t_1.size());
-  for (std::size_t i = 0; i < aux.m_blocks; ++i) {
-    aux.m_bits[i] = t_1.m_bits[i] ^ t_2.m_bits[i];
-  }
-  return aux;
 }
 
 DynamicBitset& DynamicBitset::operator&=(const DynamicBitset& t_other) {
@@ -336,6 +314,7 @@ DynamicBitset& DynamicBitset::operator^=(const DynamicBitset& t_other) {
 
 DynamicBitset DynamicBitset::operator~() {
   for (std::size_t i = 0; i < this->m_blocks; ++i) {
+    // Don´t need to apply mask due it doesn´t affect the significant bits
     m_bits[i] = ~m_bits[i];
   }
   return *this;
@@ -363,6 +342,14 @@ DynamicBitset& DynamicBitset::operator>>=(std::size_t t_pos) {
   return *this;
 }
 
+// Example of the algorithm in i block (blocks of 8 bits):
+//   t_pos == 4
+//   mask[i] and [i + 1] == 11111111
+//   original block[i] == 10110100 
+//   original block[i + 1] == 00110000 (the algorithm has been always already passed from i + 1)
+//   remain -> 00001011
+//   block[i] -> 0100000
+//   block[i + 1] -> 00110000 | 00001011 -> 00111011
 void DynamicBitset::bitwiseLeft(std::size_t t_pos) {
   std::size_t blockWise = 0;
   while (t_pos >= BLOCK_SIZE) {
@@ -372,12 +359,20 @@ void DynamicBitset::bitwiseLeft(std::size_t t_pos) {
   if (blockWise > 0) this->shiftBlocksLeft(blockWise);
   
   for (long long i = this->m_blocks - 1; i >= 0; --i) {
-    const std::size_t remain = (this->m_bits[i] & this->m_mask[i]) >> (BLOCK_SIZE - t_pos);
+    const std::size_t remain = (this->m_bits[i] & this->m_mask[i]) >> (BLOCK_SIZE - t_pos); // mask applied
     this->m_bits[i] = (this->m_bits[i] & this->m_mask[i]) << t_pos;
     if ((i + 1) < static_cast<long long>(this->m_blocks)) this->m_bits[i + 1] = this->m_bits[i + 1] | remain;
   }
 }
 
+// Example of the algorithm in i block (blocks of 8 bits):
+//   t_pos == 4
+//   mask[i] and [i - 1] == 11111111
+//   original block[i] == 10110100 
+//   original block[i - 1] == 00000011 (the algorithm has been always already passed from i - 1)
+//   remain -> 01000000
+//   block[i] -> 00001011
+//   block[i - 1] -> 00000011 | 01000000 -> 01000011
 void DynamicBitset::bitwiseRight(std::size_t t_pos) {
   std::size_t blockWise = 0;
   while (t_pos >= BLOCK_SIZE) {
@@ -386,17 +381,21 @@ void DynamicBitset::bitwiseRight(std::size_t t_pos) {
   }
   if (blockWise > 0) this->shiftBlocksRight(blockWise);
   for (long long i = 0; i < static_cast<long long>(this->m_blocks); ++i) {
-    const std::size_t remain = (this->m_bits[i] & this->m_mask[i]) << (BLOCK_SIZE - t_pos);
+    const std::size_t remain = (this->m_bits[i] & this->m_mask[i]) << (BLOCK_SIZE - t_pos); // mask applied
     this->m_bits[i] = (this->m_bits[i] & this->m_mask[i]) >> t_pos;
     if ((i - 1) >= static_cast<long long>(0)) this->m_bits[i - 1] = this->m_bits[i - 1] | remain;
   }
 }
 
+// SHIFT BLOCKS(LEFT|RIGHT)
+// Due this implementation is not a continuous set of bits, when you apply a shift of more than the size of the block
+// It is more easy just move the blocks of position
 void DynamicBitset::shiftBlocksLeft(std::size_t t_pos) {
   for (long long i = m_blocks - 1; i >= 0; --i) {
     const long long newPos = i + t_pos;
     if (newPos < static_cast<long long>(m_blocks)) {
-      m_bits[newPos] = m_bits[i];
+      // apply mask to avoid bringing crap from the no significant bits
+      m_bits[newPos] = (m_bits[i] & m_mask[i]);
     }
     m_bits[i] = 0;
   }
@@ -406,25 +405,14 @@ void DynamicBitset::shiftBlocksRight(std::size_t t_pos) {
   for (std::size_t i = 0; i < m_blocks; ++i) {
     const long long newPos = i - t_pos;
     if (newPos >= 0) {
-      m_bits[newPos] = m_bits[i];
+      // apply mask to avoid bringing crap from the no significant bits
+      m_bits[newPos] = (m_bits[i] & m_mask[i]);
     }
     m_bits[i] = 0;
   }
 }
 
-std::ostream& operator<<(std::ostream& os, const DynamicBitset& t_bitset) {
-  os << t_bitset.to_string();
-  return os;
-}
-
-std::istream& operator>>(std::istream& is, DynamicBitset& t_bitset) {
-  std::string aux;
-  is >> aux;
-  t_bitset.buildFromString(aux);
-
-  return is;
-}
-
+// it is more easy and logical resize the bitset with the size of the string
 void DynamicBitset::buildFromString(const std::string& t_string) {
   destroy();
   build(t_string.size());
@@ -437,7 +425,7 @@ void DynamicBitset::buildFromString(const std::string& t_string) {
       continue;
     }
     else {
-      throw(DynamicBitsetUtils::DynamicBitsetUnknownChar());
+      throw(DynamicBitsetUnknownChar());
     }
   }
 }

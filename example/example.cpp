@@ -8,6 +8,8 @@
 #include "DynamicBitset/DynamicBitset.hpp"
 #include <iostream>
 
+using namespace DynBitset;
+
 int main() {
   DynamicBitset bitset1; // build a bitset of 64 bits with all set to 0
   DynamicBitset bitset2(30); // build a bitset of 30 with all set to 0
