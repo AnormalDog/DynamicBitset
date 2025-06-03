@@ -2,19 +2,19 @@
  * Creator: AnormalDog
  * License: MIT
  * 
- * example file about the usage of DynamicBitset
+ * example file about the usage of RuntimeBitset
  */
 
-#include "DynamicBitset/DynamicBitset.hpp"
+#include "RuntimeBitset/RuntimeBitset.hpp"
 #include <iostream>
 
 using namespace DynBitset;
 
 int main() {
-  DynamicBitset bitset1; // build a bitset of 64 bits with all set to 0
-  DynamicBitset bitset2(30); // build a bitset of 30 with all set to 0
+  RuntimeBitset bitset1; // build a bitset of 64 bits with all set to 0
+  RuntimeBitset bitset2(30); // build a bitset of 30 with all set to 0
   // build a bitset of 30 bits and append the first 64 bits (if the size is less than 64, append the first n bits)
-  DynamicBitset bitset3(30, 50);
+  RuntimeBitset bitset3(30, 50);
   std::cin >> bitset2;  // build from standard input. The size will be the size of the input
 
   std::cout << bitset3 << std::endl; // print the bitset
@@ -26,8 +26,8 @@ int main() {
 
   bitset3 <<= 5;
   bitset3 >>= 5;
-  bitset1 = DynamicBitset(30, 1);
-  DynamicBitset bitset4 = bitset1 & bitset3;
+  bitset1 = RuntimeBitset(30, 1);
+  RuntimeBitset bitset4 = bitset1 & bitset3;
 
   std::cout << bitset4 << std::endl;
 

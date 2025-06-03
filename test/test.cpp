@@ -2,21 +2,21 @@
  * Creator: AnormalDog
  * License: MIT
  * 
- * test file used for testing DynamicBitset
+ * test file used for testing RuntimeBitset
  */
 
 
-// g++ -Wall -Wextra -Werror -I lib/ -g lib/DynamicBitset/DynamicBitset.cpp test/test.cpp
+// g++ -Wall -Wextra -Werror -I lib/ -g lib/RuntimeBitset/RuntimeBitset.cpp test/test.cpp
 
-#include "DynamicBitset/DynamicBitset.hpp"
+#include "RuntimeBitset/RuntimeBitset.hpp"
 #include <iostream>
 #include <bitset>
 
 using namespace DynBitset;
 
 int main() {
-  DynamicBitset one(70, ~0);
-  DynamicBitset::Reference ref = one[15];
+  RuntimeBitset one(70, ~0);
+  RuntimeBitset::Reference ref = one[15];
   ref.flip();
   std::cout << ref << std::endl;
   one[10] = false;

@@ -1,4 +1,4 @@
-# DynamicBitset
+# RuntimeBitset
 
 library whose purpose is to be a substitute for std::bitset, but whose assignment is done at runtime.
 
@@ -9,7 +9,7 @@ No dependecy needed
 ## Usage
 
 ```cpp
-#include "DynamicBitset/DynamicBitset.hpp"
+#include "RuntimeBitset/RuntimeBitset.hpp"
 ```
 
 Uses same (or very similar) interface to std::bitset

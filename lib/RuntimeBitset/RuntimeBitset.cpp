@@ -2,11 +2,11 @@
  * Creator: AnormalDog
  * License: MIT
  * 
- * source file, implementation of the class DynamicBitset, represents
+ * source file, implementation of the class RuntimeBitset, represents
  *   a bitset without template
  */
 
-#include "DynamicBitset/DynamicBitset.hpp"
+#include "RuntimeBitset/RuntimeBitset.hpp"
 #include <iostream>
 #include <bitset>
 #include <sstream>
@@ -15,48 +15,48 @@
 
 using namespace DynBitset;
 
-DynamicBitset::DynamicBitset(const std::size_t t_size, const std::size_t t_num) {
+RuntimeBitset::RuntimeBitset(const std::size_t t_size, const std::size_t t_num) {
   build(t_size);
   m_bits[0] = t_num;
 }
 
-DynamicBitset::DynamicBitset(const std::size_t t_size) {
+RuntimeBitset::RuntimeBitset(const std::size_t t_size) {
   build(t_size);
   clean();
 }
 
-DynamicBitset::DynamicBitset(const std::string& t_string) {
+RuntimeBitset::RuntimeBitset(const std::string& t_string) {
   buildFromString(t_string);
 }
 
-DynamicBitset::DynamicBitset() {
+RuntimeBitset::RuntimeBitset() {
   build(BLOCK_SIZE);
   clean();
 }
 
-DynamicBitset::~DynamicBitset() {
+RuntimeBitset::~RuntimeBitset() {
   destroy();
 }
 
-DynamicBitset::DynamicBitset(const DynamicBitset& t_dynamicBitset) {
-  copy(*this, t_dynamicBitset);
+RuntimeBitset::RuntimeBitset(const RuntimeBitset& t_RuntimeBitset) {
+  copy(*this, t_RuntimeBitset);
 }
 
-DynamicBitset& DynamicBitset::operator=(const DynamicBitset& t_dynamicBitset) {
-  copy(*this, t_dynamicBitset);
+RuntimeBitset& RuntimeBitset::operator=(const RuntimeBitset& t_RuntimeBitset) {
+  copy(*this, t_RuntimeBitset);
   return *this;
 }
 
-DynamicBitset::DynamicBitset(DynamicBitset&& t_dynamicBitset) {
-  move(*this, t_dynamicBitset);
+RuntimeBitset::RuntimeBitset(RuntimeBitset&& t_RuntimeBitset) {
+  move(*this, t_RuntimeBitset);
 }
 
-DynamicBitset& DynamicBitset::operator=(DynamicBitset&& t_dynamicBitset) {
-  move(*this, t_dynamicBitset);
+RuntimeBitset& RuntimeBitset::operator=(RuntimeBitset&& t_RuntimeBitset) {
+  move(*this, t_RuntimeBitset);
   return *this;
 }
 
-std::string DynamicBitset::to_string() const noexcept {
+std::string RuntimeBitset::to_string() const noexcept {
   std::string toReturn;
   for (long long i = m_blocks - 1; i >= 0; --i) {
     std::stringstream buffer; // Auxiliar buffer, pending of improving
@@ -82,8 +82,8 @@ std::string DynamicBitset::to_string() const noexcept {
   return toReturn;
 }
 
-void DynamicBitset::build(const std::size_t t_size) {
-  if (t_size == 0) throw (DynamicBitsetInvalidSize()); // Bitsets of size 0 breaks the implementation
+void RuntimeBitset::build(const std::size_t t_size) {
+  if (t_size == 0) throw (RuntimeBitsetInvalidSize()); // Bitsets of size 0 breaks the implementation
   destroy();
   m_size = t_size;
   m_blocks = getNumberBlocks(t_size); // Get the minimal number of blocks needed to represent the numbe of bits
@@ -91,7 +91,7 @@ void DynamicBitset::build(const std::size_t t_size) {
   buildMask();
 }
 
-std::size_t DynamicBitset::getNumberBlocks(const std::size_t t_size) noexcept {
+std::size_t RuntimeBitset::getNumberBlocks(const std::size_t t_size) noexcept {
   assert (t_size != 0);
   std::size_t numberOfBlocks = 0;
   for (std::size_t i = 0; i < t_size; i+=BLOCK_SIZE) {
@@ -100,12 +100,12 @@ std::size_t DynamicBitset::getNumberBlocks(const std::size_t t_size) noexcept {
   return numberOfBlocks;
 }
 
-void DynamicBitset::buildBlocks() {
+void RuntimeBitset::buildBlocks() {
   m_bits = new std::size_t[m_blocks];
   m_mask = new std::size_t[m_blocks];
 }
 
-void DynamicBitset::buildMask() {
+void RuntimeBitset::buildMask() {
   for (std::size_t i = 0; i < m_blocks; ++i) {
     m_mask[i] = ALL_BITS_ONE;
   }
@@ -113,19 +113,19 @@ void DynamicBitset::buildMask() {
   m_mask[m_blocks - 1] = getLastMask(lastMask); // Only the most significant block has a no ~0 mask
 }
 
-void DynamicBitset::clean() {
+void RuntimeBitset::clean() {
   for (std::size_t i = 0; i < m_blocks; ++i) {
     m_bits[i] = 0;
   }
 }
 
-std::size_t DynamicBitset::getLastMask(const std::size_t t_number_bits) {
+std::size_t RuntimeBitset::getLastMask(const std::size_t t_number_bits) {
   std::size_t lastMask = ALL_BITS_ONE;
   lastMask >>= (BLOCK_SIZE - t_number_bits);
   return lastMask;
 }
 
-void DynamicBitset::destroy() {
+void RuntimeBitset::destroy() {
   if (m_bits != nullptr) { // Avoid double deletion
     delete[] m_bits;
     m_bits = nullptr;
@@ -138,7 +138,7 @@ void DynamicBitset::destroy() {
   m_blocks = 0;
 }
 
-void DynamicBitset::copy(DynamicBitset& t_copy, const DynamicBitset& t_toCopy) {
+void RuntimeBitset::copy(RuntimeBitset& t_copy, const RuntimeBitset& t_toCopy) {
   t_copy.destroy();
   t_copy.build(t_toCopy.size()); // bitset of same size as t_toCopy
   for (std::size_t i = 0; i < t_copy.m_blocks; ++i) {
@@ -147,7 +147,7 @@ void DynamicBitset::copy(DynamicBitset& t_copy, const DynamicBitset& t_toCopy) {
   }
 }
 
-void DynamicBitset::move(DynamicBitset& t_move, DynamicBitset& t_toMove) {
+void RuntimeBitset::move(RuntimeBitset& t_move, RuntimeBitset& t_toMove) {
   t_move.destroy();
   // MOVE
   t_move.m_bits = t_toMove.m_bits;
@@ -162,32 +162,32 @@ void DynamicBitset::move(DynamicBitset& t_move, DynamicBitset& t_toMove) {
   t_toMove.build(1);
 }
 
-unsigned long long DynamicBitset::to_ullong() const noexcept {
+unsigned long long RuntimeBitset::to_ullong() const noexcept {
   std::size_t bits = m_bits[0] & m_mask[0]; // Aply mask to avoid useless bits
   return static_cast<unsigned long long>(bits); // return the less significant <sizeof(ullong) * 8 bits> of the less significant block
 
 }
 
-unsigned long DynamicBitset::to_ulong() const noexcept {
+unsigned long RuntimeBitset::to_ulong() const noexcept {
   std::size_t bits = m_bits[0] & m_mask[0];// Aply mask to avoid useless bits
   return static_cast<unsigned long>(bits); // return the less significant <sizeof(ulong) * 8 bits> of the less significant block
 }
 
-bool DynamicBitset::all() const noexcept {
+bool RuntimeBitset::all() const noexcept {
   for ( std::size_t i = 0; i < m_blocks; ++i) {
     if ((m_bits[i] & m_mask[i]) != m_mask[i]) return false; // If applying the mask is equal to mask, then it is true
   }
   return true;
 }
 
-bool DynamicBitset::any() const noexcept {
+bool RuntimeBitset::any() const noexcept {
   for (std::size_t i = 0; i < m_blocks; ++i) {
     if ((m_bits[i] & m_mask[i]) != 0) return true; // If applying the mask is not 0, then atleast 1 bit is set
   }
   return false;
 }
 
-bool DynamicBitset::none() const noexcept {
+bool RuntimeBitset::none() const noexcept {
   for (std::size_t i = 0; i < m_blocks; ++i) {
     if ((m_bits[i] & m_mask[i]) != 0) return false; // exactly the opposite to any
   }
@@ -196,8 +196,8 @@ bool DynamicBitset::none() const noexcept {
 
 // At first, my idea was the .second was t_position (relative position inside the block)
 // But for more comfortable code, I decided the .second was the mask of the relative position
-std::pair<std::size_t, std::size_t> DynamicBitset::getPosition(std::size_t t_position) const {
-  if (t_position >= m_size) throw(DynamicBitsetOutOfRange());
+std::pair<std::size_t, std::size_t> RuntimeBitset::getPosition(std::size_t t_position) const {
+  if (t_position >= m_size) throw(RuntimeBitsetOutOfRange());
   std::size_t blockPosition = 0;
   // Get in what block is allocated
   while (t_position >= BLOCK_SIZE) {
@@ -208,20 +208,20 @@ std::pair<std::size_t, std::size_t> DynamicBitset::getPosition(std::size_t t_pos
 }
 
 // Returns a mask with all 0 except in the t_position
-std::size_t DynamicBitset::getMaskPosition(const std::size_t t_position) {
+std::size_t RuntimeBitset::getMaskPosition(const std::size_t t_position) {
   assert(t_position <= BLOCK_SIZE);
   constexpr std::size_t auxMask = 1;
   return (auxMask << t_position);
 }
 
-DynamicBitset& DynamicBitset::set() noexcept {
+RuntimeBitset& RuntimeBitset::set() noexcept {
   for (std::size_t i = 0; i < m_blocks; ++i) {
     m_bits[i] = ALL_BITS_ONE;
   }
   return *this;
 }
 
-DynamicBitset& DynamicBitset::set(const std::size_t t_position) {
+RuntimeBitset& RuntimeBitset::set(const std::size_t t_position) {
   const std::pair<std::size_t, std::size_t> position(getPosition(t_position));
   const std::size_t blockPosition = position.first;
   const std::size_t positionMask = position.second;
@@ -229,12 +229,12 @@ DynamicBitset& DynamicBitset::set(const std::size_t t_position) {
   return *this;
 }
 
-DynamicBitset& DynamicBitset::reset() noexcept {
+RuntimeBitset& RuntimeBitset::reset() noexcept {
   clean();
   return *this;
 }
 
-DynamicBitset& DynamicBitset::reset(const std::size_t t_position) {
+RuntimeBitset& RuntimeBitset::reset(const std::size_t t_position) {
   const std::pair<std::size_t, std::size_t> position(getPosition(t_position));
   const std::size_t blockPosition = position.first;
   const std::size_t positionMask = ~position.second; // Reversed position mask
@@ -242,14 +242,14 @@ DynamicBitset& DynamicBitset::reset(const std::size_t t_position) {
   return *this;
 }
 
-DynamicBitset& DynamicBitset::flip() noexcept {
+RuntimeBitset& RuntimeBitset::flip() noexcept {
   for (std::size_t i = 0; i < m_blocks; ++i) {
     m_bits[i] = ~m_bits[i];
   }
   return *this;
 }
 
-DynamicBitset& DynamicBitset::flip(const std::size_t t_position) {
+RuntimeBitset& RuntimeBitset::flip(const std::size_t t_position) {
   const std::pair<std::size_t, std::size_t> position(getPosition(t_position));
   const std::size_t blockPosition = position.first;
   const std::size_t positionMask = position.second;
@@ -263,11 +263,11 @@ DynamicBitset& DynamicBitset::flip(const std::size_t t_position) {
   return *this;
 }
 
-void DynamicBitset::printDebug() const noexcept {
+void RuntimeBitset::printDebug() const noexcept {
   std::cout << "size: " << m_size << std::endl << "blocks: " << m_blocks << std::endl;
 }
 
-std::size_t DynamicBitset::count() const noexcept {
+std::size_t RuntimeBitset::count() const noexcept {
   std::size_t numberOfActive = 0;
   for (std::size_t i = 0; i < m_blocks; ++i) {
     std::size_t block = m_bits[i] & m_mask[i]; // apply mask; remove no significant bits
@@ -279,15 +279,15 @@ std::size_t DynamicBitset::count() const noexcept {
   return numberOfActive;
 }
 
-bool DynamicBitset::operator[](std::size_t t_position) const {
+bool RuntimeBitset::operator[](std::size_t t_position) const {
   return getValueInPosition(t_position);
 }
 
-bool DynamicBitset::test(std::size_t t_position) const {
+bool RuntimeBitset::test(std::size_t t_position) const {
   return getValueInPosition(t_position);
 }
 
-bool DynamicBitset::getValueInPosition(std::size_t t_position) const {
+bool RuntimeBitset::getValueInPosition(std::size_t t_position) const {
   const std::pair<std::size_t, std::size_t> position(getPosition(t_position));
   const std::size_t blockPosition = position.first;
   const std::size_t positionMask = position.second;
@@ -297,22 +297,22 @@ bool DynamicBitset::getValueInPosition(std::size_t t_position) const {
   return true;
 }
 
-DynamicBitset& DynamicBitset::operator&=(const DynamicBitset& t_other) {
+RuntimeBitset& RuntimeBitset::operator&=(const RuntimeBitset& t_other) {
   *this = *this & t_other;
   return *this;
 }
 
-DynamicBitset& DynamicBitset::operator|=(const DynamicBitset& t_other) {
+RuntimeBitset& RuntimeBitset::operator|=(const RuntimeBitset& t_other) {
   *this = *this | t_other;
   return *this;
 }
 
-DynamicBitset& DynamicBitset::operator^=(const DynamicBitset& t_other) {
+RuntimeBitset& RuntimeBitset::operator^=(const RuntimeBitset& t_other) {
   *this = *this ^ t_other;
   return *this;
 }
 
-DynamicBitset DynamicBitset::operator~() {
+RuntimeBitset RuntimeBitset::operator~() {
   for (std::size_t i = 0; i < this->m_blocks; ++i) {
     // Don´t need to apply mask due it doesn´t affect the significant bits
     m_bits[i] = ~m_bits[i];
@@ -320,24 +320,24 @@ DynamicBitset DynamicBitset::operator~() {
   return *this;
 }
 
-DynamicBitset DynamicBitset::operator<<(std::size_t t_pos) const {
-  DynamicBitset aux = *this;
+RuntimeBitset RuntimeBitset::operator<<(std::size_t t_pos) const {
+  RuntimeBitset aux = *this;
   aux.bitwiseLeft(t_pos);
   return aux;
 }
 
-DynamicBitset DynamicBitset::operator>>(std::size_t t_pos) const {
-  DynamicBitset aux = *this;
+RuntimeBitset RuntimeBitset::operator>>(std::size_t t_pos) const {
+  RuntimeBitset aux = *this;
   aux.bitwiseRight(t_pos);
   return aux;
 }
 
-DynamicBitset& DynamicBitset::operator<<=(std::size_t t_pos) {
+RuntimeBitset& RuntimeBitset::operator<<=(std::size_t t_pos) {
   this->bitwiseLeft(t_pos);
   return *this;
 }
 
-DynamicBitset& DynamicBitset::operator>>=(std::size_t t_pos) {
+RuntimeBitset& RuntimeBitset::operator>>=(std::size_t t_pos) {
   this->bitwiseRight(t_pos);
   return *this;
 }
@@ -350,7 +350,7 @@ DynamicBitset& DynamicBitset::operator>>=(std::size_t t_pos) {
 //   remain -> 00001011
 //   block[i] -> 0100000
 //   block[i + 1] -> 00110000 | 00001011 -> 00111011
-void DynamicBitset::bitwiseLeft(std::size_t t_pos) {
+void RuntimeBitset::bitwiseLeft(std::size_t t_pos) {
   std::size_t blockWise = 0;
   while (t_pos >= BLOCK_SIZE) {
     ++blockWise;
@@ -373,7 +373,7 @@ void DynamicBitset::bitwiseLeft(std::size_t t_pos) {
 //   remain -> 01000000
 //   block[i] -> 00001011
 //   block[i - 1] -> 00000011 | 01000000 -> 01000011
-void DynamicBitset::bitwiseRight(std::size_t t_pos) {
+void RuntimeBitset::bitwiseRight(std::size_t t_pos) {
   std::size_t blockWise = 0;
   while (t_pos >= BLOCK_SIZE) {
     ++blockWise;
@@ -390,7 +390,7 @@ void DynamicBitset::bitwiseRight(std::size_t t_pos) {
 // SHIFT BLOCKS(LEFT|RIGHT)
 // Due this implementation is not a continuous set of bits, when you apply a shift of more than the size of the block
 // It is more easy just move the blocks of position
-void DynamicBitset::shiftBlocksLeft(std::size_t t_pos) {
+void RuntimeBitset::shiftBlocksLeft(std::size_t t_pos) {
   for (long long i = m_blocks - 1; i >= 0; --i) {
     const long long newPos = i + t_pos;
     if (newPos < static_cast<long long>(m_blocks)) {
@@ -401,7 +401,7 @@ void DynamicBitset::shiftBlocksLeft(std::size_t t_pos) {
   }
 }
 
-void DynamicBitset::shiftBlocksRight(std::size_t t_pos) {
+void RuntimeBitset::shiftBlocksRight(std::size_t t_pos) {
   for (std::size_t i = 0; i < m_blocks; ++i) {
     const long long newPos = i - t_pos;
     if (newPos >= 0) {
@@ -413,7 +413,7 @@ void DynamicBitset::shiftBlocksRight(std::size_t t_pos) {
 }
 
 // it is more easy and logical resize the bitset with the size of the string
-void DynamicBitset::buildFromString(const std::string& t_string) {
+void RuntimeBitset::buildFromString(const std::string& t_string) {
   destroy();
   build(t_string.size());
   const std::size_t sizeAux = t_string.size() - 1;
@@ -425,18 +425,18 @@ void DynamicBitset::buildFromString(const std::string& t_string) {
       continue;
     }
     else {
-      throw(DynamicBitsetUnknownChar());
+      throw(RuntimeBitsetUnknownChar());
     }
   }
 }
 
-DynamicBitset::Reference DynamicBitset::operator[](std::size_t t_pos) {
-  if (t_pos >= m_size) throw(DynamicBitsetOutOfRange());
+RuntimeBitset::Reference RuntimeBitset::operator[](std::size_t t_pos) {
+  if (t_pos >= m_size) throw(RuntimeBitsetOutOfRange());
   return Reference(*this, t_pos);
 }
 
 // REFERENCE
-DynamicBitset::Reference& DynamicBitset::Reference::operator=(const bool t_value) {
+RuntimeBitset::Reference& RuntimeBitset::Reference::operator=(const bool t_value) {
   if (t_value == true) {
     m_bitset.set(m_position);
   }
@@ -446,15 +446,15 @@ DynamicBitset::Reference& DynamicBitset::Reference::operator=(const bool t_value
   return *this;
 }
 
-DynamicBitset::Reference::operator bool() const {
+RuntimeBitset::Reference::operator bool() const {
   return m_bitset.getValueInPosition(m_position);
 }
 
-bool DynamicBitset::Reference::operator~() const {
+bool RuntimeBitset::Reference::operator~() const {
   return !(m_bitset.getValueInPosition(m_position));
 }
 
-DynamicBitset::Reference& DynamicBitset::Reference::flip() {
+RuntimeBitset::Reference& RuntimeBitset::Reference::flip() {
   m_bitset.flip(m_position);
   return *this;
 }
